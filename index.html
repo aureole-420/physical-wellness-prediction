@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset='utf-8'>
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <link href='https://fonts.googleapis.com/css?family=Chivo:900' rel='stylesheet' type='text/css'>
+    <link rel="stylesheet" type="text/css" href="stylesheets/stylesheet.css" media="screen">
+    <link rel="stylesheet" type="text/css" href="stylesheets/github-dark.css" media="screen">
+    <link rel="stylesheet" type="text/css" href="stylesheets/print.css" media="print">
+    <!--[if lt IE 9]>
+    <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <title>Practical machine learning assignment by aureole-420</title>
+  </head>
+
+  <body>
+    <div id="container">
+      <div class="inner">
+
+        <header>
+          <h1>Practical machine learning assignment</h1>
+          <h2>The folder contains assignment for pml on Coursera</h2>
+        </header>
+
+        <section id="downloads" class="clearfix">
+          <a href="https://github.com/aureole-420/practical_machine_learning_assignment/zipball/master" id="download-zip" class="button"><span>Download .zip</span></a>
+          <a href="https://github.com/aureole-420/practical_machine_learning_assignment/tarball/master" id="download-tar-gz" class="button"><span>Download .tar.gz</span></a>
+          <a href="https://github.com/aureole-420/practical_machine_learning_assignment" id="view-on-github" class="button"><span>View on GitHub</span></a>
+        </section>
+
+        <hr>
+
+        <section id="main_content">
+          <h2>
+<a id="practical-machine-learning-prediction-assignment-writeup" class="anchor" href="#practical-machine-learning-prediction-assignment-writeup" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Practical Machine Learning: Prediction Assignment Writeup</h2>
+
+<p>The wide application of smart devices such as Jawbone Up, Nike FuelBand and Fitbit makes it possible to 
+a large amount of data about personal activity relatively inexpensively. In this project, people were asked to perform barbell lifts correctly and incorrectly in 5 different ways. The goal will 
+be to use data from accelerometers on the belt, forearm, arm, and dumbell of 6 participants, to quantify how well they do it. </p>
+
+<ul>
+<li>Data used for the assignment is kindly provided by <a href="http://groupware.les.inf.puc-rio.br/har">http://groupware.les.inf.puc-rio.br/har</a>
+</li>
+<li>data for training <a href="https://d396qusza40orc.cloudfront.net/predmachlearn/pml-training.csv">https://d396qusza40orc.cloudfront.net/predmachlearn/pml-training.csv</a>
+</li>
+<li>data for testing <a href="https://d396qusza40orc.cloudfront.net/predmachlearn/pml-testing.csv">https://d396qusza40orc.cloudfront.net/predmachlearn/pml-testing.csv</a>
+</li>
+</ul>
+
+<h3>
+<a id="data-cleaning" class="anchor" href="#data-cleaning" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Data Cleaning</h3>
+
+<ul>
+<li>Load caret and ggplot2 package for training and ploting. </li>
+</ul>
+
+<div class="highlight highlight-source-r"><pre>library(<span class="pl-smi">caret</span>)
+library(<span class="pl-smi">ggplot2</span>)</pre></div>
+
+<ul>
+<li>Data loading</li>
+</ul>
+
+<div class="highlight highlight-source-r"><pre><span class="pl-c">## ============ Read training and testing data ==========================</span>
+<span class="pl-smi">training_raw</span> <span class="pl-k">&lt;-</span> read.csv(<span class="pl-s"><span class="pl-pds">"</span>pml-training.csv<span class="pl-pds">"</span></span>)
+<span class="pl-smi">testing_raw</span> <span class="pl-k">&lt;-</span> read.csv(<span class="pl-s"><span class="pl-pds">"</span>pml-testing.csv<span class="pl-pds">"</span></span>)</pre></div>
+
+<ul>
+<li>There are too many predictors, so removing columns with space, NA. Also remove the first 4 irrelevant columns.</li>
+</ul>
+
+<pre><code>training_data &lt;- training_raw[,colSums(is.na(training_raw)) == 0]
+training_data &lt;- training_data[,sapply(training_data,is.numeric)] 
+training_data &lt;- training_data[,-c(1:4)]
+</code></pre>
+
+<ul>
+<li> First convert all elements to numerical value then conduct the correlation analysis. Highly correlated columns should be dumped keep less predictors for the prediction in the next part. </li>
+</ul>
+
+<div class="highlight highlight-source-r"><pre><span class="pl-c"># Dump highly correlated variables</span>
+<span class="pl-smi">CorMat</span> <span class="pl-k">&lt;-</span> cor(<span class="pl-smi">training_data</span>)
+<span class="pl-smi">remove</span> <span class="pl-k">&lt;-</span> findCorrelation(<span class="pl-smi">CorMat</span>, <span class="pl-v">cutoff</span> <span class="pl-k">=</span> <span class="pl-c1">0.9</span>)
+<span class="pl-smi">training_data</span> <span class="pl-k">&lt;-</span> <span class="pl-smi">training_data</span>[,<span class="pl-k">-</span><span class="pl-smi">remove</span>]
+<span class="pl-smi">training_data</span>[[<span class="pl-s"><span class="pl-pds">"</span>classe<span class="pl-pds">"</span></span>]] <span class="pl-k">&lt;-</span> <span class="pl-smi">training_raw</span><span class="pl-k">$</span><span class="pl-smi">classe</span></pre></div>
+
+<h3>
+<a id="data-partition-and-prediction-trials" class="anchor" href="#data-partition-and-prediction-trials" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Data Partition and prediction trials</h3>
+
+<ul>
+<li>Partition the data into training set (70%) and testing set (30%)</li>
+</ul>
+
+<div class="highlight highlight-source-r"><pre><span class="pl-c"># partition for training and testing set</span>
+set.seed(<span class="pl-c1">201604</span>)
+<span class="pl-smi">inTrain</span> <span class="pl-k">&lt;-</span> createDataPartition(<span class="pl-v">y</span> <span class="pl-k">=</span> <span class="pl-smi">training_data</span><span class="pl-k">$</span><span class="pl-smi">classe</span>, <span class="pl-v">p</span> <span class="pl-k">=</span>  <span class="pl-c1">0.6</span>, <span class="pl-v">list</span> <span class="pl-k">=</span> <span class="pl-c1">FALSE</span>)
+<span class="pl-smi">training_set</span> <span class="pl-k">&lt;-</span> <span class="pl-smi">training_data</span>[<span class="pl-smi">inTrain</span>,] 
+<span class="pl-smi">testing_set</span> <span class="pl-k">&lt;-</span> <span class="pl-smi">training_data</span>[<span class="pl-k">-</span><span class="pl-smi">inTrain</span>,]</pre></div>
+
+<ul>
+<li>Training: multiple methods in caret packages are used including: rpart(decision tree), gbm(boosting with trees), treebag (bagging), rf(random forest)</li>
+</ul>
+
+<div class="highlight highlight-source-r"><pre>print(<span class="pl-s"><span class="pl-pds">"</span>=============decision tree=========================<span class="pl-pds">"</span></span>)
+<span class="pl-smi">mod_rpart</span> <span class="pl-k">&lt;-</span> train(<span class="pl-smi">classe</span> <span class="pl-k">~</span>., <span class="pl-v">method</span> <span class="pl-k">=</span> <span class="pl-s"><span class="pl-pds">'</span>rpart<span class="pl-pds">'</span></span>,<span class="pl-v">data</span> <span class="pl-k">=</span> <span class="pl-smi">training_set</span>)
+<span class="pl-smi">pre</span> <span class="pl-k">&lt;-</span> predict(<span class="pl-smi">mod_rpart</span>, <span class="pl-v">newdata</span> <span class="pl-k">=</span> <span class="pl-smi">testing_set</span>)
+<span class="pl-smi">Imp</span> <span class="pl-k">&lt;-</span> varImp(<span class="pl-smi">mod_rpart</span>, <span class="pl-v">scale</span> <span class="pl-k">=</span> <span class="pl-c1">FALSE</span>)
+ggplot(<span class="pl-smi">Imp</span>, <span class="pl-v">top</span> <span class="pl-k">=</span> <span class="pl-c1">20</span>)
+<span class="pl-smi">performance</span> <span class="pl-k">&lt;-</span> confusionMatrix(<span class="pl-smi">pre</span>,<span class="pl-smi">testing_set</span><span class="pl-k">$</span><span class="pl-smi">classe</span>)
+print(<span class="pl-smi">performance</span>)
+print(<span class="pl-smi">performance</span><span class="pl-k">$</span><span class="pl-smi">overall</span>[<span class="pl-c1">1</span>])
+print(<span class="pl-s"><span class="pl-pds">"</span>=============boosting with trees ===================<span class="pl-pds">"</span></span>)
+<span class="pl-smi">mod_gbm</span> <span class="pl-k">&lt;-</span> train(<span class="pl-smi">classe</span> <span class="pl-k">~</span>., <span class="pl-v">method</span> <span class="pl-k">=</span> <span class="pl-s"><span class="pl-pds">'</span>gbm<span class="pl-pds">'</span></span>,<span class="pl-v">data</span> <span class="pl-k">=</span> <span class="pl-smi">training_set</span>)
+<span class="pl-smi">pre</span> <span class="pl-k">&lt;-</span> predict(<span class="pl-smi">mod_gbm</span>, <span class="pl-v">newdata</span> <span class="pl-k">=</span> <span class="pl-smi">testing_set</span>)
+<span class="pl-smi">Imp</span> <span class="pl-k">&lt;-</span> varImp(<span class="pl-smi">mod_gbm</span>, <span class="pl-v">scale</span> <span class="pl-k">=</span> <span class="pl-c1">FALSE</span>)
+ggplot(<span class="pl-smi">Imp</span>,<span class="pl-v">top</span> <span class="pl-k">=</span> <span class="pl-c1">20</span>)
+<span class="pl-smi">performance</span> <span class="pl-k">&lt;-</span> confusionMatrix(<span class="pl-smi">pre</span>,<span class="pl-smi">testing_set</span><span class="pl-k">$</span><span class="pl-smi">classe</span>)
+print(<span class="pl-smi">performance</span>)
+print(<span class="pl-smi">performance</span><span class="pl-k">$</span><span class="pl-smi">overall</span>[<span class="pl-c1">1</span>])
+print(<span class="pl-s"><span class="pl-pds">"</span>=============bagging ==============================<span class="pl-pds">"</span></span>)
+<span class="pl-smi">mod_treebag</span> <span class="pl-k">&lt;-</span> train(<span class="pl-smi">classe</span> <span class="pl-k">~</span>., <span class="pl-v">method</span> <span class="pl-k">=</span> <span class="pl-s"><span class="pl-pds">'</span>treebag<span class="pl-pds">'</span></span>,<span class="pl-v">data</span> <span class="pl-k">=</span> <span class="pl-smi">training_set</span>)
+<span class="pl-smi">pre</span> <span class="pl-k">&lt;-</span> predict(<span class="pl-smi">mod_treebag</span>, <span class="pl-v">newdata</span> <span class="pl-k">=</span> <span class="pl-smi">testing_set</span>)
+<span class="pl-smi">Imp</span> <span class="pl-k">&lt;-</span> varImp(<span class="pl-smi">mod_treebag</span>, <span class="pl-v">scale</span> <span class="pl-k">=</span> <span class="pl-c1">FALSE</span>)
+ggplot(<span class="pl-smi">Imp</span>,<span class="pl-v">top</span> <span class="pl-k">=</span> <span class="pl-c1">20</span>)
+<span class="pl-smi">performance</span> <span class="pl-k">&lt;-</span> confusionMatrix(<span class="pl-smi">pre</span>,<span class="pl-smi">testing_set</span><span class="pl-k">$</span><span class="pl-smi">classe</span>)
+print(<span class="pl-smi">performance</span>)
+print(<span class="pl-smi">performance</span><span class="pl-k">$</span><span class="pl-smi">overall</span>[<span class="pl-c1">1</span>])
+print(<span class="pl-s"><span class="pl-pds">"</span>=============random forest==========================<span class="pl-pds">"</span></span>)
+<span class="pl-smi">fit_control</span> <span class="pl-k">&lt;-</span> trainControl(<span class="pl-v">method</span> <span class="pl-k">=</span> <span class="pl-s"><span class="pl-pds">"</span>cv<span class="pl-pds">"</span></span>,<span class="pl-v">number</span> <span class="pl-k">=</span> <span class="pl-c1">3</span>, <span class="pl-v">allowParallel</span> <span class="pl-k">=</span><span class="pl-c1">T</span>, <span class="pl-v">verbose</span> <span class="pl-k">=</span> <span class="pl-c1">T</span>)
+<span class="pl-smi">mod_rf</span> <span class="pl-k">&lt;-</span> train(<span class="pl-smi">classe</span> <span class="pl-k">~</span> ., <span class="pl-v">method</span> <span class="pl-k">=</span> <span class="pl-s"><span class="pl-pds">'</span>rf<span class="pl-pds">'</span></span>, <span class="pl-v">data</span> <span class="pl-k">=</span> <span class="pl-smi">training_set</span>, <span class="pl-v">trControl</span> <span class="pl-k">=</span> <span class="pl-smi">fit_control</span>, <span class="pl-v">verbose</span> <span class="pl-k">=</span> <span class="pl-c1">T</span>)
+<span class="pl-smi">pre</span> <span class="pl-k">&lt;-</span> predict(<span class="pl-smi">mod_rf</span>, <span class="pl-v">newdata</span> <span class="pl-k">=</span> <span class="pl-smi">testing_set</span>)
+<span class="pl-smi">Imp</span> <span class="pl-k">&lt;-</span> varImp(<span class="pl-smi">mod_rf</span>, <span class="pl-v">scale</span> <span class="pl-k">=</span> <span class="pl-c1">FALSE</span>)
+ggplot(<span class="pl-smi">Imp</span>,<span class="pl-v">top</span> <span class="pl-k">=</span> <span class="pl-c1">20</span>)
+<span class="pl-smi">performance</span> <span class="pl-k">&lt;-</span> confusionMatrix(<span class="pl-smi">pre</span>,<span class="pl-smi">testing_set</span><span class="pl-k">$</span><span class="pl-smi">classe</span>)
+print(<span class="pl-smi">performance</span>)
+print(<span class="pl-smi">performance</span><span class="pl-k">$</span><span class="pl-smi">overall</span>[<span class="pl-c1">1</span>])</pre></div>
+
+<h5>
+<a id="performance-of-each-methods" class="anchor" href="#performance-of-each-methods" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Performance of each methods</h5>
+
+<ul>
+<li>
+<strong>decision tree</strong>: the accuracy is 0.5173 which is too low.</li>
+</ul>
+
+<pre><code>Confusion Matrix and Statistics
+
+          Reference
+Prediction    A    B    C    D    E
+         A 2014  580  637  513  301
+         B   51  517   54   28  243
+         C  132  328  538  126  309
+         D   34   92  139  519  118
+         E    1    1    0  100  471
+
+Overall Statistics
+
+               Accuracy : 0.5173          
+                 95% CI : (0.5062, 0.5284)
+    No Information Rate : 0.2845          
+    P-Value [Acc &gt; NIR] : &lt; 2.2e-16       
+
+                  Kappa : 0.3709          
+ Mcnemar's Test P-Value : &lt; 2.2e-16       
+
+Statistics by Class:
+
+                     Class: A Class: B Class: C Class: D Class: E
+Sensitivity            0.9023  0.34058  0.39327  0.40358  0.32663
+Specificity            0.6382  0.94058  0.86184  0.94162  0.98407
+Pos Pred Value         0.4979  0.57895  0.37544  0.57539  0.82199
+Neg Pred Value         0.9426  0.85603  0.87058  0.88954  0.86649
+Prevalence             0.2845  0.19347  0.17436  0.16391  0.18379
+Detection Rate         0.2567  0.06589  0.06857  0.06615  0.06003
+Detection Prevalence   0.5155  0.11382  0.18264  0.11496  0.07303
+Balanced Accuracy      0.7703  0.64058  0.62756  0.67260  0.65535
+</code></pre>
+
+<ul>
+<li>
+<strong>boosting with trees</strong>:</li>
+</ul>
+
+<pre><code>Confusion Matrix and Statistics
+
+          Reference
+Prediction    A    B    C    D    E
+         A 2196   51    0    1    2
+         B   21 1408   52    8   21
+         C    9   53 1294   45   10
+         D    3    2   21 1216   18
+         E    3    4    1   16 1391
+
+Overall Statistics
+
+               Accuracy : 0.9565          
+                 95% CI : (0.9518, 0.9609)
+    No Information Rate : 0.2845          
+    P-Value [Acc &gt; NIR] : &lt; 2.2e-16       
+
+                  Kappa : 0.945           
+ Mcnemar's Test P-Value : 4.692e-08       
+
+Statistics by Class:
+
+                     Class: A Class: B Class: C Class: D Class: E
+Sensitivity            0.9839   0.9275   0.9459   0.9456   0.9646
+Specificity            0.9904   0.9839   0.9819   0.9933   0.9963
+Pos Pred Value         0.9760   0.9325   0.9171   0.9651   0.9830
+Neg Pred Value         0.9936   0.9826   0.9885   0.9894   0.9921
+Prevalence             0.2845   0.1935   0.1744   0.1639   0.1838
+Detection Rate         0.2799   0.1795   0.1649   0.1550   0.1773
+Detection Prevalence   0.2868   0.1925   0.1798   0.1606   0.1803
+Balanced Accuracy      0.9871   0.9557   0.9639   0.9694   0.9804
+</code></pre>
+
+<ul>
+<li>
+<strong>bagging</strong> </li>
+</ul>
+
+<pre><code>Confusion Matrix and Statistics
+
+          Reference
+Prediction    A    B    C    D    E
+         A 2219   18    0    0    0
+         B    8 1468   13    0    1
+         C    3   23 1345   20    5
+         D    1    7   10 1263    2
+         E    1    2    0    3 1434
+
+Overall Statistics
+
+               Accuracy : 0.9851          
+                 95% CI : (0.9822, 0.9877)
+    No Information Rate : 0.2845          
+    P-Value [Acc &gt; NIR] : &lt; 2.2e-16       
+
+                  Kappa : 0.9811          
+ Mcnemar's Test P-Value : 0.002177        
+
+Statistics by Class:
+
+                     Class: A Class: B Class: C Class: D Class: E
+Sensitivity            0.9942   0.9671   0.9832   0.9821   0.9945
+Specificity            0.9968   0.9965   0.9921   0.9970   0.9991
+Pos Pred Value         0.9920   0.9852   0.9635   0.9844   0.9958
+Neg Pred Value         0.9977   0.9921   0.9964   0.9965   0.9988
+Prevalence             0.2845   0.1935   0.1744   0.1639   0.1838
+Detection Rate         0.2828   0.1871   0.1714   0.1610   0.1828
+Detection Prevalence   0.2851   0.1899   0.1779   0.1635   0.1835
+Balanced Accuracy      0.9955   0.9818   0.9877   0.9895   0.9968
+</code></pre>
+
+<ul>
+<li><strong>random forest</strong></li>
+</ul>
+
+<pre><code>Confusion Matrix and Statistics
+
+          Reference
+Prediction    A    B    C    D    E
+         A 2229    1    0    0    0
+         B    2 1515    4    0    0
+         C    0    2 1360    5    2
+         D    0    0    4 1281    1
+         E    1    0    0    0 1439
+
+Overall Statistics
+
+               Accuracy : 0.9972          
+                 95% CI : (0.9958, 0.9982)
+    No Information Rate : 0.2845          
+    P-Value [Acc &gt; NIR] : &lt; 2.2e-16       
+
+                  Kappa : 0.9965          
+ Mcnemar's Test P-Value : NA              
+
+Statistics by Class:
+
+                     Class: A Class: B Class: C Class: D Class: E
+Sensitivity            0.9987   0.9980   0.9942   0.9961   0.9979
+Specificity            0.9998   0.9991   0.9986   0.9992   0.9998
+Pos Pred Value         0.9996   0.9961   0.9934   0.9961   0.9993
+Neg Pred Value         0.9995   0.9995   0.9988   0.9992   0.9995
+Prevalence             0.2845   0.1935   0.1744   0.1639   0.1838
+Detection Rate         0.2841   0.1931   0.1733   0.1633   0.1834
+Detection Prevalence   0.2842   0.1939   0.1745   0.1639   0.1835
+Balanced Accuracy      0.9992   0.9985   0.9964   0.9977   0.9989
+</code></pre>
+
+<h4>
+<a id="choosing-prediction-model" class="anchor" href="#choosing-prediction-model" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Choosing prediction model</h4>
+
+<p>The accuracy of prediction made by random forest model (0.9972) is the highest of all models.
+Below is the importance of variable of the random forest
+<img src="https://github.com/aureole-420/practical_machine_learning_assignment/blob/master/rf.png" alt=""></p>
+
+<h2>
+<a id="out-of-sample-accuracy" class="anchor" href="#out-of-sample-accuracy" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Out of sample accuracy</h2>
+
+<p>The analysis above shows the random forest with the best performance in prediction, so it will be used for prediction for testing set.</p>
+
+<pre><code>oospre &lt;- predict(mod_rf, newdata = testing_raw)
+print("random forest")
+print(oospre)
+</code></pre>
+
+<p>The results is displayed below which one can check in the following quiz to be all correct.</p>
+
+<pre><code>[1] "random forest"
+&gt; print(oospre)
+ [1] B A B A A E D B A A B C B A E E A B B B
+Levels: A B C D E
+</code></pre>
+        </section>
+
+        <footer>
+          Practical machine learning assignment is maintained by <a href="https://github.com/aureole-420">aureole-420</a><br>
+          This page was generated by <a href="https://pages.github.com">GitHub Pages</a>. Tactile theme by <a href="https://twitter.com/jasonlong">Jason Long</a>.
+        </footer>
+
+        
+      </div>
+    </div>
+  </body>
+</html>
