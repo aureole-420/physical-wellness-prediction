@@ -81,7 +81,113 @@ print(performance)
 print(performance$overall[1])
 ```
 ####### Performance of each methods
+* **decision tree**: the accuracy is 0.5173 which is too low.
 
+```
+Confusion Matrix and Statistics
+
+          Reference
+Prediction    A    B    C    D    E
+         A 2014  580  637  513  301
+         B   51  517   54   28  243
+         C  132  328  538  126  309
+         D   34   92  139  519  118
+         E    1    1    0  100  471
+
+Overall Statistics
+                                          
+               Accuracy : 0.5173          
+                 95% CI : (0.5062, 0.5284)
+    No Information Rate : 0.2845          
+    P-Value [Acc > NIR] : < 2.2e-16       
+                                          
+                  Kappa : 0.3709          
+ Mcnemar's Test P-Value : < 2.2e-16       
+
+Statistics by Class:
+
+                     Class: A Class: B Class: C Class: D Class: E
+Sensitivity            0.9023  0.34058  0.39327  0.40358  0.32663
+Specificity            0.6382  0.94058  0.86184  0.94162  0.98407
+Pos Pred Value         0.4979  0.57895  0.37544  0.57539  0.82199
+Neg Pred Value         0.9426  0.85603  0.87058  0.88954  0.86649
+Prevalence             0.2845  0.19347  0.17436  0.16391  0.18379
+Detection Rate         0.2567  0.06589  0.06857  0.06615  0.06003
+Detection Prevalence   0.5155  0.11382  0.18264  0.11496  0.07303
+Balanced Accuracy      0.7703  0.64058  0.62756  0.67260  0.65535
+```
+* **boosting with trees**:
+```
+Confusion Matrix and Statistics
+
+          Reference
+Prediction    A    B    C    D    E
+         A 2196   51    0    1    2
+         B   21 1408   52    8   21
+         C    9   53 1294   45   10
+         D    3    2   21 1216   18
+         E    3    4    1   16 1391
+
+Overall Statistics
+                                          
+               Accuracy : 0.9565          
+                 95% CI : (0.9518, 0.9609)
+    No Information Rate : 0.2845          
+    P-Value [Acc > NIR] : < 2.2e-16       
+                                          
+                  Kappa : 0.945           
+ Mcnemar's Test P-Value : 4.692e-08       
+
+Statistics by Class:
+
+                     Class: A Class: B Class: C Class: D Class: E
+Sensitivity            0.9839   0.9275   0.9459   0.9456   0.9646
+Specificity            0.9904   0.9839   0.9819   0.9933   0.9963
+Pos Pred Value         0.9760   0.9325   0.9171   0.9651   0.9830
+Neg Pred Value         0.9936   0.9826   0.9885   0.9894   0.9921
+Prevalence             0.2845   0.1935   0.1744   0.1639   0.1838
+Detection Rate         0.2799   0.1795   0.1649   0.1550   0.1773
+Detection Prevalence   0.2868   0.1925   0.1798   0.1606   0.1803
+Balanced Accuracy      0.9871   0.9557   0.9639   0.9694   0.9804
+```
+* **bagging** 
+```
+Confusion Matrix and Statistics
+
+          Reference
+Prediction    A    B    C    D    E
+         A 2219   18    0    0    0
+         B    8 1468   13    0    1
+         C    3   23 1345   20    5
+         D    1    7   10 1263    2
+         E    1    2    0    3 1434
+
+Overall Statistics
+                                          
+               Accuracy : 0.9851          
+                 95% CI : (0.9822, 0.9877)
+    No Information Rate : 0.2845          
+    P-Value [Acc > NIR] : < 2.2e-16       
+                                          
+                  Kappa : 0.9811          
+ Mcnemar's Test P-Value : 0.002177        
+
+Statistics by Class:
+
+                     Class: A Class: B Class: C Class: D Class: E
+Sensitivity            0.9942   0.9671   0.9832   0.9821   0.9945
+Specificity            0.9968   0.9965   0.9921   0.9970   0.9991
+Pos Pred Value         0.9920   0.9852   0.9635   0.9844   0.9958
+Neg Pred Value         0.9977   0.9921   0.9964   0.9965   0.9988
+Prevalence             0.2845   0.1935   0.1744   0.1639   0.1838
+Detection Rate         0.2828   0.1871   0.1714   0.1610   0.1828
+Detection Prevalence   0.2851   0.1899   0.1779   0.1635   0.1835
+Balanced Accuracy      0.9955   0.9818   0.9877   0.9895   0.9968
+```
+
+
+
+* **random forest**
 ```
 Confusion Matrix and Statistics
 
@@ -115,3 +221,9 @@ Detection Rate         0.2841   0.1931   0.1733   0.1633   0.1834
 Detection Prevalence   0.2842   0.1939   0.1745   0.1639   0.1835
 Balanced Accuracy      0.9992   0.9985   0.9964   0.9977   0.9989
 ```
+#### Choosing prediction model
+The accuracy of prediction made by random forest model is the highest of all models
+
+
+## Out of sample accuracy
+
