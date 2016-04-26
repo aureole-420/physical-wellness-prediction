@@ -4,14 +4,12 @@ The wide application of smart devices such as Jawbone Up, Nike FuelBand and Fitb
 a large amount of data about personal activity relatively inexpensively. In this project, the goal will 
 be to use data from accelerometers on the belt, forearm, arm, and dumbell of 6 participants, to quantify how well they do it. 
 They were asked to perform barbell lifts correctly and incorrectly in 5 different ways.
-More information is available from the website here
-
-### Data
 * Data used for the assignment is kindly provided by http://groupware.les.inf.puc-rio.br/har
 
-The training data for this project are available here:
+data for training
 https://d396qusza40orc.cloudfront.net/predmachlearn/pml-training.csv
-The test data are available here:
+
+data for testing
 https://d396qusza40orc.cloudfront.net/predmachlearn/pml-testing.csv
 
 ### Data Cleaning
@@ -32,7 +30,7 @@ training_data <- training_raw[,colSums(is.na(training_raw)) == 0]
 training_data <- training_data[,sapply(training_data,is.numeric)] 
 training_data <- training_data[,-c(1:4)]
 ```
-*  First convert all elements to numerical value then conduct the correlation analysis. Highly correlated columns should be dumped. 
+*  First convert all elements to numerical value then conduct the correlation analysis. Highly correlated columns should be dumped keep less predictors for the prediction in the next part. 
 ```R
 # Dump highly correlated variables
 CorMat <- cor(training_data)
@@ -40,6 +38,11 @@ remove <- findCorrelation(CorMat, cutoff = 0.9)
 training_data <- training_data[,-remove]
 training_data[["classe"]] <- training_raw$classe
 ```
+
+### Data Partition and prediction trials
+* 
+
+
 
 
 
