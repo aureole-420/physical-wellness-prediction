@@ -80,7 +80,7 @@ performance <- confusionMatrix(pre,testing_set$classe)
 print(performance)
 print(performance$overall[1])
 ```
-####### Performance of each methods
+##### Performance of each methods
 * **decision tree**: the accuracy is 0.5173 which is too low.
 
 ```
@@ -222,8 +222,23 @@ Detection Prevalence   0.2842   0.1939   0.1745   0.1639   0.1835
 Balanced Accuracy      0.9992   0.9985   0.9964   0.9977   0.9989
 ```
 #### Choosing prediction model
-The accuracy of prediction made by random forest model is the highest of all models
+The accuracy of prediction made by random forest model (0.9972) is the highest of all models.
+Below is the importance of variable of the random forest
+![](https://github.com/aureole-420/practical_machine_learning_assignment/blob/master/rf.png)
 
 
 ## Out of sample accuracy
+The analysis above shows the random forest with the best performance in prediction, so it will be used for prediction for testing set.
+```
+oospre <- predict(mod_rf, newdata = testing_raw)
+print("random forest")
+print(oospre)
+```
+The results is displayed below which one can check in the following quiz to be all correct.
+```
+[1] "random forest"
+> print(oospre)
+ [1] B A B A A E D B A A B C B A E E A B B B
+Levels: A B C D E
+```
 
