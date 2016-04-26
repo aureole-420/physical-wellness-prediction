@@ -80,3 +80,38 @@ performance <- confusionMatrix(pre,testing_set$classe)
 print(performance)
 print(performance$overall[1])
 ```
+####### Performance of each methods
+
+```
+Confusion Matrix and Statistics
+
+          Reference
+Prediction    A    B    C    D    E
+         A 2229    1    0    0    0
+         B    2 1515    4    0    0
+         C    0    2 1360    5    2
+         D    0    0    4 1281    1
+         E    1    0    0    0 1439
+
+Overall Statistics
+                                          
+               Accuracy : 0.9972          
+                 95% CI : (0.9958, 0.9982)
+    No Information Rate : 0.2845          
+    P-Value [Acc > NIR] : < 2.2e-16       
+                                          
+                  Kappa : 0.9965          
+ Mcnemar's Test P-Value : NA              
+
+Statistics by Class:
+
+                     Class: A Class: B Class: C Class: D Class: E
+Sensitivity            0.9987   0.9980   0.9942   0.9961   0.9979
+Specificity            0.9998   0.9991   0.9986   0.9992   0.9998
+Pos Pred Value         0.9996   0.9961   0.9934   0.9961   0.9993
+Neg Pred Value         0.9995   0.9995   0.9988   0.9992   0.9995
+Prevalence             0.2845   0.1935   0.1744   0.1639   0.1838
+Detection Rate         0.2841   0.1931   0.1733   0.1633   0.1834
+Detection Prevalence   0.2842   0.1939   0.1745   0.1639   0.1835
+Balanced Accuracy      0.9992   0.9985   0.9964   0.9977   0.9989
+```
