@@ -15,6 +15,31 @@ The test data are available here:
 https://d396qusza40orc.cloudfront.net/predmachlearn/pml-testing.csv
 
 ### Data Cleaning
+* Load caret and ggplot2 package for training and ploting. 
+```R
+library(caret)
+library(ggplot2)
+```
+* Data loading
+```R
+## ============ Read training and testing data ==========================
+training_raw <- read.csv("pml-training.csv")
+testing_raw <- read.csv("pml-testing.csv")
+```
+* There are too many predictors, so removing columns with space, NA. Also remove the first 4 irrelevant columns.
+```
+training_data <- training_raw[,colSums(is.na(training_raw)) == 0]
+training_data <- training_data[,sapply(training_data,is.numeric)] 
+training_data <- training_data[,-c(1:4)]
+```
+*  First convert all elements to numerical value then conduct the correlation analysis. Highly correlated columns should be dumped. 
+```R
+# Dump highly correlated variables
+CorMat <- cor(training_data)
+remove <- findCorrelation(CorMat, cutoff = 0.9)
+training_data <- training_data[,-remove]
+training_data[["classe"]] <- training_raw$classe
+```
 
 
 
