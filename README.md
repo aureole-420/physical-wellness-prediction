@@ -1,4 +1,4 @@
-## Practical Machine Learning: Prediction Assignment Writeup
+# Quantitatively predicting physical wellness using Exercise-activity data collecting by smart devices.
 
 The wide application of smart devices such as Jawbone Up, Nike FuelBand and Fitbit makes it possible to 
 a large amount of data about personal activity relatively inexpensively. In this project, people were asked to perform barbell lifts correctly and incorrectly in 5 different ways. The goal will 
